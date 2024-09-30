@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { LinksFunction } from "@remix-run/cloudflare";
 import {
   Links,
@@ -5,7 +6,10 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
+  useNavigation,
 } from "@remix-run/react";
+import { AnimatePresence } from "framer-motion";
 
 import "./tailwind.css";
 
@@ -23,6 +27,14 @@ export const links: LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const [isHydrated, setIsHydrated] = useState(false);
+  const location = useLocation();
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   return (
     <html lang="en">
       <head>
@@ -32,7 +44,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <AnimatePresence mode="wait" initial={false}>
+          {isHydrated ? (
+            <div key={location.pathname}>
+              {navigation.state === "loading" ? <div>Loading...</div> : children}
+            </div>
+          ) : (
+            children
+          )}
+        </AnimatePresence>
         <ScrollRestoration />
         <Scripts />
       </body>
